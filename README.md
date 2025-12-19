@@ -1,38 +1,29 @@
-# FlatSat Challenge
+# FlatSat Challenge (Mac Test Branch)
 
-This project captures photos on a Raspberry Pi when a shake is detected via an IMU, then automatically pushes the images to GitHub.
+This branch (`mac-test`) is designed for testing the FlatSat logic on a macOS laptop. 
+It mocks the IMU (accelerometer) with random data and uses the laptop's webcam instead of the Raspberry Pi camera.
 
 ## Requirements
 
-- Raspberry Pi with Camera Module
-- LSM6DSOX Accelerometer/Gyro
-- LIS3MDL Magnetometer
-- [uv](https://docs.astral.sh/uv/) installed on the Pi
+- macOS
+- Webcam
+- [uv](https://docs.astral.sh/uv/)
 
-## Setup
+## Setup & Usage
 
-1. **Clone the repository:**
-   ```bash
-   git clone git@github.com:team-soundwave/flatsat.git
-   cd flatsat
-   ```
-
-2. **Configure GitHub Access:**
-   Ensure your Pi has SSH keys configured or a PAT set up so that `git push` works without manual interaction.
-
-3. **Install Dependencies:**
+1. **Install Dependencies:**
    ```bash
    uv sync
    ```
 
-## Usage
+2. **Run the script:**
+   ```bash
+   uv run main.py
+   ```
 
-Run the main script:
-```bash
-uv run main.py
-```
-
-The script will:
-1. Monitor the IMU for acceleration exceeding the `THRESHOLD`.
-2. Capture a photo and save it to the `images/` directory.
-3. Commit and push the new photo to the `origin` remote.
+3. **What to expect:**
+   - The script will start a loop.
+   - It randomly simulates "accelerometer" readings.
+   - About 5% of the time, it will trigger a "shake".
+   - Your webcam will turn on, take a picture, save it to `images/`, and attempt to push it to GitHub.
+   - **Press Ctrl+C to stop.**

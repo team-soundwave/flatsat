@@ -1,39 +1,25 @@
-"""
-The Python code you will write for this module should read
-acceleration data from the IMU. When a reading comes in that surpasses
-an acceleration threshold (indicating a shake), your Pi should pause,
-trigger the camera to take a picture, then save the image with a
-descriptive filename. You may use GitHub to upload your images automatically,
-but for this activity it is not required.
-
-The provided functions are only for reference, you do not need to use them. 
-You will need to complete the take_photo() function and configure the VARIABLES section
-"""
-
 #AUTHOR: 
 #DATE:
 
 #import libraries
 import os
 import time
-import board
-from adafruit_lsm6ds.lsm6dsox import LSM6DSOX as LSM6DS
-from adafruit_lis3mdl import LIS3MDL
+import random
+import cv2
 from git import Repo
-from picamera2 import Picamera2
 
 #VARIABLES
 # NOTE: Configure these values before running the program
-THRESHOLD = 0      #Any desired value from the accelerometer (e.g., 2.0 for shake detection)
-REPO_PATH = "."     #Your github repo path: ex. /home/pi/FlatSatChallenge
-FOLDER_PATH = "images"   #Your image folder path in your GitHub repo: ex. /Images
+THRESHOLD = 5.0      # Increased threshold for random simulation
+REPO_PATH = "."     #Your github repo path
+FOLDER_PATH = "images"   #Your image folder path
 
-#imu and camera initialization
-i2c = board.I2C()
-accel_gyro = LSM6DS(i2c)
-mag = LIS3MDL(i2c)
-picam2 = Picamera2()
-
+# Mocking the sensors and camera setup
+print("Initializing MacBook Webcam...")
+cap = cv2.VideoCapture(0)
+if not cap.isOpened():
+    print("Cannot open webcam")
+    exit()
 
 def git_push():
     """
@@ -46,7 +32,7 @@ def git_push():
         origin.pull()
         print('pulled changes')
         repo.git.add(os.path.join(REPO_PATH, FOLDER_PATH))
-        repo.index.commit('New Photo')
+        repo.index.commit('New Photo from Mac')
         print('made the commit')
         origin.push()
         print('pushed changes')
@@ -57,9 +43,6 @@ def git_push():
 def img_gen(name):
     """
     This function is complete. Generates a new image name.
-
-    Parameters:
-        name (str): your name ex. MasonM
     """
     t = time.strftime("_%H%M%S")
     imgname = os.path.join(REPO_PATH, FOLDER_PATH, f'{name}{t}.jpg')
@@ -68,34 +51,53 @@ def img_gen(name):
 
 def take_photo():
     """
-    This function is complete. Takes a photo when the FlatSat is shaken.
+    Simulates shaking detection and takes a photo using the webcam.
     """
-    while True:
-        accelx, accely, accelz = accel_gyro.acceleration
+    print("Starting monitoring loop... (Press Ctrl+C to stop)")
+    try:
+        while True:
+            # Simulate accelerometer data
+            # mostly low numbers, occasionally a "shake"
+            accelx = random.uniform(0, 1)
+            accely = random.uniform(0, 1)
+            accelz = random.uniform(0, 1)
 
-        # Check if any acceleration reading is above threshold
-        if abs(accelx) > THRESHOLD or abs(accely) > THRESHOLD or abs(accelz) > THRESHOLD:
-            # Pause to stabilize
-            time.sleep(0.5)
+            # Randomly trigger a "shake"
+            if random.random() < 0.05: # 5% chance per loop
+                accelx = THRESHOLD + 1
+
+            # Check if any acceleration reading is above threshold
+            if abs(accelx) > THRESHOLD or abs(accely) > THRESHOLD or abs(accelz) > THRESHOLD:
+                print("Shake detected!")
+                # Pause to stabilize
+                time.sleep(0.5)
+                
+                # Set name for image
+                name = "FlatSat_Mac" 
+                
+                # Take photo
+                imgname = img_gen(name)
+                
+                ret, frame = cap.read()
+                if ret:
+                    cv2.imwrite(imgname, frame)
+                    print(f'Photo saved: {imgname}')
+                    
+                    # Push photo to GitHub
+                    git_push()
+                else:
+                    print("Failed to capture image")
+                
+                # Debounce delay
+                time.sleep(2.0)
             
-            # Set name for image
-            name = "FlatSat"  # First Name, Last Initial  ex. MasonM
-            
-            # Take photo
-            imgname = img_gen(name)
-            picam2.start()
-            picam2.capture_file(imgname)
-            picam2.stop()
-            print(f'Photo saved: {imgname}')
-            
-            # Push photo to GitHub
-            git_push()
-            
-            # Debounce delay to prevent multiple photos from single shake event
-            time.sleep(2.0)
-        
-        # Pause to prevent excessive CPU usage
-        time.sleep(0.1)
+            # Pause to prevent excessive CPU usage
+            time.sleep(0.1)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        cap.release()
+        print("\nExiting and releasing camera.")
 
 
 def main():
