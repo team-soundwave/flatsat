@@ -14,6 +14,7 @@ You will need to complete the take_photo() function and configure the VARIABLES 
 #DATE:
 
 #import libraries
+import os
 import time
 import board
 from adafruit_lsm6ds.lsm6dsox import LSM6DSOX as LSM6DS
@@ -24,8 +25,8 @@ from picamera2 import Picamera2
 #VARIABLES
 # NOTE: Configure these values before running the program
 THRESHOLD = 0      #Any desired value from the accelerometer (e.g., 2.0 for shake detection)
-REPO_PATH = ""     #Your github repo path: ex. /home/pi/FlatSatChallenge
-FOLDER_PATH = ""   #Your image folder path in your GitHub repo: ex. /Images
+REPO_PATH = "."     #Your github repo path: ex. /home/pi/FlatSatChallenge
+FOLDER_PATH = "images"   #Your image folder path in your GitHub repo: ex. /Images
 
 #imu and camera initialization
 i2c = board.I2C()
@@ -44,13 +45,13 @@ def git_push():
         print('added remote')
         origin.pull()
         print('pulled changes')
-        repo.git.add(REPO_PATH + FOLDER_PATH)
+        repo.git.add(os.path.join(REPO_PATH, FOLDER_PATH))
         repo.index.commit('New Photo')
         print('made the commit')
         origin.push()
         print('pushed changes')
-    except:
-        print('Couldn\'t upload to git')
+    except Exception as e:
+        print(f'Couldn\'t upload to git: {e}')
 
 
 def img_gen(name):
@@ -61,7 +62,7 @@ def img_gen(name):
         name (str): your name ex. MasonM
     """
     t = time.strftime("_%H%M%S")
-    imgname = (f'{REPO_PATH}/{FOLDER_PATH}/{name}{t}.jpg')
+    imgname = os.path.join(REPO_PATH, FOLDER_PATH, f'{name}{t}.jpg')
     return imgname
 
 

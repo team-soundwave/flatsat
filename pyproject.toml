@@ -1,0 +1,13 @@
+[project]
+name = "flatsat"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "adafruit-blinka>=8.68.1",
+    "adafruit-circuitpython-lis3mdl>=1.2.6",
+    "adafruit-circuitpython-lsm6ds>=4.6",
+    "gitpython>=3.1.45",
+    "picamera2",
+]
