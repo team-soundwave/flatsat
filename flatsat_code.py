@@ -22,7 +22,8 @@ from git import Repo
 from picamera2 import Picamera2
 
 #VARIABLES
-THRESHOLD = 0      #Any desired value from the accelerometer
+# NOTE: Configure these values before running the program
+THRESHOLD = 0      #Any desired value from the accelerometer (e.g., 2.0 for shake detection)
 REPO_PATH = ""     #Your github repo path: ex. /home/pi/FlatSatChallenge
 FOLDER_PATH = ""   #Your image folder path in your GitHub repo: ex. /Images
 
@@ -88,6 +89,9 @@ def take_photo():
             
             # Push photo to GitHub
             git_push()
+            
+            # Debounce delay to prevent multiple photos from single shake event
+            time.sleep(2.0)
         
         # Pause to prevent excessive CPU usage
         time.sleep(0.1)
