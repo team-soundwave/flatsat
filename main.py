@@ -43,7 +43,7 @@ picam2 = Picamera2()
 
 def git_push():
     """
-    This function is complete. Stages, commits, and pushes new images to your GitHub repo.
+    This function is complete. Stages, commits, and pushes new images and graphs to your GitHub repo.
     """
     try:
         repo = Repo(REPO_PATH)
@@ -52,7 +52,8 @@ def git_push():
         origin.pull()
         print('pulled changes')
         repo.git.add(os.path.join(REPO_PATH, FOLDER_PATH))
-        repo.index.commit('New Photo')
+        repo.git.add(os.path.join(REPO_PATH, GRAPHS_PATH))
+        repo.index.commit('New Photo and Graph')
         print('made the commit')
         origin.push()
         print('pushed changes')
