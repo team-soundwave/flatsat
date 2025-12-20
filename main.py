@@ -21,10 +21,12 @@ from adafruit_lsm6ds.lsm6dsox import LSM6DSOX as LSM6DS
 from adafruit_lis3mdl import LIS3MDL
 from git import Repo
 from picamera2 import Picamera2
+import math
 
 #VARIABLES
 # NOTE: Configure these values before running the program
-THRESHOLD = 0      #Any desired value from the accelerometer (e.g., 2.0 for shake detection)
+THRESHOLD = 2      #Any desired value from the accelerometer (e.g., 2.0 for shake detection)
+GRAVIT
 REPO_PATH = "."     #Your github repo path: ex. /home/pi/FlatSatChallenge
 FOLDER_PATH = "images"   #Your image folder path in your GitHub repo: ex. /Images
 
@@ -70,11 +72,15 @@ def take_photo():
     """
     This function is complete. Takes a photo when the FlatSat is shaken.
     """
+    prev_x, prev_y, prev_z = accel_gyro.acceleration
+    prev_x, prev_y, prev_z = accel_gyro.acceleration
     while True:
         accelx, accely, accelz = accel_gyro.acceleration
+        diffx, diffy, diffz = accelx - prev_x, accely - prev_y, accelz - prev_z
 
+        print(accelx, accely, accelz)
         # Check if any acceleration reading is above threshold
-        if abs(accelx) > THRESHOLD or abs(accely) > THRESHOLD or abs(accelz) > THRESHOLD:
+        if abs(diffx) > THRESHOLD or abs(diffy) > THRESHOLD or abs(diffz) > THRESHOLD:
             # Pause to stabilize
             time.sleep(0.5)
             
@@ -90,12 +96,20 @@ def take_photo():
             
             # Push photo to GitHub
             git_push()
+            while True:
+                vx, vy, vz = accel_gyro.acceleration
+                current_mag = math.sqrt(vx**2 + vy**2 + vz**2)
+                print(current_mag)
+                if current_mag < :
+                    break
+                time.sleep(0.1)
             
-            # Debounce delay to prevent multiple photos from single shake event
-            time.sleep(2.0)
+            # # Debounce delay to prevent multiple photos from single shake event
+            # time.sleep(1)
         
         # Pause to prevent excessive CPU usage
         time.sleep(0.1)
+        prev_x, prev_y, prev_z = accelx, accely, accelz
 
 
 def main():
