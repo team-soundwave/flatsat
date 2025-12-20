@@ -22,6 +22,9 @@ from adafruit_lis3mdl import LIS3MDL
 from git import Repo
 from picamera2 import Picamera2
 import math
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for headless systems
+import matplotlib.pyplot as plt
 
 #VARIABLES
 # NOTE: Configure these values before running the program
@@ -29,6 +32,7 @@ THRESHOLD = 2      #Any desired value from the accelerometer (e.g., 2.0 for shak
 GRAV_ACCEL = 9.8
 REPO_PATH = "."     #Your github repo path: ex. /home/pi/FlatSatChallenge
 FOLDER_PATH = "images"   #Your image folder path in your GitHub repo: ex. /Images
+GRAPHS_PATH = "graphs"   #Your graphs folder path in your GitHub repo
 
 #imu and camera initialization
 i2c = board.I2C()
@@ -68,19 +72,91 @@ def img_gen(name):
     return imgname
 
 
+def save_acceleration_graph(timestamps, accel_x, accel_y, accel_z, accel_mag):
+    """
+    Generates and saves a matplotlib graph of acceleration data.
+    
+    Parameters:
+        timestamps (list): List of timestamps for each acceleration reading
+        accel_x (list): X-axis acceleration values
+        accel_y (list): Y-axis acceleration values
+        accel_z (list): Z-axis acceleration values
+        accel_mag (list): Magnitude of acceleration values
+    """
+    if not timestamps or len(timestamps) == 0:
+        print("No acceleration data to plot")
+        return
+    
+    # Create figure with subplots
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10))
+    
+    # Plot individual acceleration components
+    ax1.plot(timestamps, accel_x, label='X-axis', alpha=0.7)
+    ax1.plot(timestamps, accel_y, label='Y-axis', alpha=0.7)
+    ax1.plot(timestamps, accel_z, label='Z-axis', alpha=0.7)
+    ax1.set_xlabel('Time (seconds)')
+    ax1.set_ylabel('Acceleration (m/s²)')
+    ax1.set_title('Acceleration Components Over Time')
+    ax1.legend()
+    ax1.grid(True, alpha=0.3)
+    
+    # Plot acceleration magnitude
+    ax2.plot(timestamps, accel_mag, label='Magnitude', color='purple', linewidth=2)
+    ax2.axhline(y=THRESHOLD + GRAV_ACCEL, color='r', linestyle='--', label=f'Threshold ({THRESHOLD + GRAV_ACCEL:.1f} m/s²)')
+    ax2.set_xlabel('Time (seconds)')
+    ax2.set_ylabel('Acceleration Magnitude (m/s²)')
+    ax2.set_title('Acceleration Magnitude Over Time')
+    ax2.legend()
+    ax2.grid(True, alpha=0.3)
+    
+    plt.tight_layout()
+    
+    # Generate filename with timestamp
+    t = time.strftime("_%Y%m%d_%H%M%S")
+    graph_path = os.path.join(REPO_PATH, GRAPHS_PATH, f'acceleration{t}.png')
+    
+    # Ensure graphs directory exists
+    os.makedirs(os.path.join(REPO_PATH, GRAPHS_PATH), exist_ok=True)
+    
+    # Save the figure
+    plt.savefig(graph_path, dpi=100, bbox_inches='tight')
+    plt.close(fig)
+    
+    print(f'Acceleration graph saved: {graph_path}')
+    return graph_path
+
+
 def take_photo():
     """
     This function is complete. Takes a photo when the FlatSat is shaken.
+    Also collects acceleration data and generates a graph after each session.
     """
+    # Lists to store acceleration data for graphing
+    timestamps = []
+    accel_x_data = []
+    accel_y_data = []
+    accel_z_data = []
+    accel_mag_data = []
+    start_time = time.time()
+    
     prev_x, prev_y, prev_z = accel_gyro.acceleration
     prev_x, prev_y, prev_z = accel_gyro.acceleration
     while True:
         accelx, accely, accelz = accel_gyro.acceleration
         diffx, diffy, diffz = accelx - prev_x, accely - prev_y, accelz - prev_z
+        
+        # Record acceleration data for graphing
+        current_time = time.time() - start_time
+        accel_magnitude = math.sqrt(accelx**2 + accely**2 + accelz**2)
+        timestamps.append(current_time)
+        accel_x_data.append(accelx)
+        accel_y_data.append(accely)
+        accel_z_data.append(accelz)
+        accel_mag_data.append(accel_magnitude)
 
-        print(accelx, accely, accelz, math.sqrt(accelx**2 + accely**2 + accelz**2))
+        print(accelx, accely, accelz, accel_magnitude)
         # Check if any acceleration reading is above threshold
-        if math.sqrt(accelx**2 + accely**2 + accelz**2) > THRESHOLD + GRAV_ACCEL:
+        if accel_magnitude > THRESHOLD + GRAV_ACCEL:
             # Pause to stabilize
             time.sleep(0.5)
             
@@ -93,6 +169,9 @@ def take_photo():
             picam2.capture_file(imgname)
             picam2.stop()
             print(f'Photo saved: {imgname}')
+            
+            # Generate and save acceleration graph
+            save_acceleration_graph(timestamps, accel_x_data, accel_y_data, accel_z_data, accel_mag_data)
             
             # Push photo to GitHub
             git_push()

@@ -11,4 +11,5 @@ dependencies = [
     "gitpython>=3.1.45",
     "picamera2",
     "rpi-gpio>=0.7.1",
+    "matplotlib>=3.7.0",
 ]
