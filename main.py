@@ -26,7 +26,7 @@ import math
 #VARIABLES
 # NOTE: Configure these values before running the program
 THRESHOLD = 2      #Any desired value from the accelerometer (e.g., 2.0 for shake detection)
-GRAVIT
+GRAV_ACCEL = 9.8
 REPO_PATH = "."     #Your github repo path: ex. /home/pi/FlatSatChallenge
 FOLDER_PATH = "images"   #Your image folder path in your GitHub repo: ex. /Images
 
@@ -78,9 +78,9 @@ def take_photo():
         accelx, accely, accelz = accel_gyro.acceleration
         diffx, diffy, diffz = accelx - prev_x, accely - prev_y, accelz - prev_z
 
-        print(accelx, accely, accelz)
+        print(accelx, accely, accelz, math.sqrt(accelx**2 + accely**2 + accelz**2))
         # Check if any acceleration reading is above threshold
-        if abs(diffx) > THRESHOLD or abs(diffy) > THRESHOLD or abs(diffz) > THRESHOLD:
+        if math.sqrt(accelx**2 + accely**2 + accelz**2) > THRESHOLD + GRAV_ACCEL:
             # Pause to stabilize
             time.sleep(0.5)
             
@@ -97,10 +97,10 @@ def take_photo():
             # Push photo to GitHub
             git_push()
             while True:
-                vx, vy, vz = accel_gyro.acceleration
-                current_mag = math.sqrt(vx**2 + vy**2 + vz**2)
+                ax, ay, az = accel_gyro.acceleration
+                current_mag = math.sqrt(ax**2 + ay**2 + az**2)
                 print(current_mag)
-                if current_mag < :
+                if current_mag < THRESHOLD + GRAV_ACCEL:
                     break
                 time.sleep(0.1)
             
