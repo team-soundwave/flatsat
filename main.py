@@ -84,7 +84,7 @@ def save_acceleration_graph(timestamps, accel_x, accel_y, accel_z, accel_mag):
         accel_z (list): Z-axis acceleration values
         accel_mag (list): Magnitude of acceleration values
     """
-    if not timestamps or len(timestamps) == 0:
+    if not timestamps:
         print("No acceleration data to plot")
         return
     
@@ -133,6 +133,8 @@ def take_photo():
     Also collects acceleration data and generates a graph after each session.
     """
     # Lists to store acceleration data for graphing
+    # Note: Data is collected until a shake is detected, at which point
+    # a graph is generated and the program continues monitoring
     timestamps = []
     accel_x_data = []
     accel_y_data = []
@@ -141,10 +143,8 @@ def take_photo():
     start_time = time.time()
     
     prev_x, prev_y, prev_z = accel_gyro.acceleration
-    prev_x, prev_y, prev_z = accel_gyro.acceleration
     while True:
         accelx, accely, accelz = accel_gyro.acceleration
-        diffx, diffy, diffz = accelx - prev_x, accely - prev_y, accelz - prev_z
         
         # Record acceleration data for graphing
         current_time = time.time() - start_time
